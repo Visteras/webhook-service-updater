@@ -138,7 +138,7 @@ func CheckStackAccess(ctx *macaron.Context) {
 	user := User{}
 	s := ctx.Params(":service")
 	fn := ctx.Params(":filename")
-	_, _ = GetUser(ctx.Req.Header.Get(WsuUser), &user)
+	username, _ := GetUser(ctx.Req.Header.Get(WsuUser), &user)
 	myErr := true
 
 	for _, value := range user.Stacks {
@@ -149,7 +149,7 @@ func CheckStackAccess(ctx *macaron.Context) {
 	}
 	if myErr && user.IsAdmin {
 		myErr = false
-		log.Println(fmt.Sprintf("\033[1;32m Admin(%s) Access for %s/%s \033[0m", user, s, fn))
+		log.Println(fmt.Sprintf("\033[1;32m Admin(%s) Access for %s/%s \033[0m", username, s, fn))
 	}
 
 	if myErr {
