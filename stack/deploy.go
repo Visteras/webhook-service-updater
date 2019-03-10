@@ -16,7 +16,7 @@ func Deploy(ctx *macaron.Context) {
 		filename := ctx.Params(":filename")
 		args := []string{"stack", "deploy", service, "-c", "/app/files/yml/" + filename + ".yml"}
 
-		log.Println(fmt.Sprintf("\033[1;32m Stack Deploy %s/%s from (%s/%s) \033[0m", service, filename, ctx.Req.RemoteAddr, ctx.Req.Header.Get(viper.GetString("WSU_USER"))))
+		log.Println(fmt.Sprintf("\033[1;32m Stack Deploy %s/%s from (%s/%s) \033[0m", service, filename, ctx.RemoteAddr(), ctx.Req.Header.Get(viper.GetString("WSU_USER"))))
 
 		str, err := docker.DockerCmd(args...)
 		if err != nil {

@@ -12,7 +12,6 @@ import (
 	"gopkg.in/macaron.v1"
 	"log"
 	"net/http"
-	"strings"
 )
 
 var Prefix string
@@ -81,7 +80,7 @@ func CheckAccess(ctx *macaron.Context) {
 		token := ctx.Req.Header.Get(WsuToken)
 		for _, v := range user.Tokens {
 			if v == token {
-				log.Println(fmt.Sprintf("\033[1;32m Auth %s from %s \033[0m", username, ctx.Req.RemoteAddr))
+				log.Println(fmt.Sprintf("\033[1;32m Auth %s from %s \033[0m", username, ctx.RemoteAddr()))
 				auth = true
 			}
 		}
@@ -95,7 +94,7 @@ func CheckAccess(ctx *macaron.Context) {
 
 func CheckIPAccess(ctx *macaron.Context) {
 	user := User{}
-	ip := strings.Split(ctx.Req.RemoteAddr, ":")[0]
+	ip := ctx.RemoteAddr()
 	_, _ = GetUser(ctx.Req.Header.Get(WsuUser), &user)
 	myErr := true
 
