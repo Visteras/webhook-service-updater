@@ -15,7 +15,9 @@ func Deploy(ctx *macaron.Context) {
 		service := ctx.Params(":service")
 		filename := ctx.Params(":filename")
 		args := []string{"stack", "deploy", service, "-c", "/app/files/yml/" + filename + ".yml"}
-
+		if ctx.Req.URL.Query().Get("with-registry-auth") == "true" {
+			args = append(args, "--with-registry-auth")
+		}
 		log.Println(fmt.Sprintf("\033[1;32m Stack Deploy %s/%s from (%s/%s) \033[0m", service, filename, ctx.RemoteAddr(), ctx.Req.Header.Get(viper.GetString("WSU_USER"))))
 
 		str, err := docker.DockerCmd(args...)
