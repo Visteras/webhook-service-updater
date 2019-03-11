@@ -10,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"gopkg.in/macaron.v1"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -17,6 +18,12 @@ import (
 var Prefix string
 var WsuUser string
 var WsuToken string
+var WsuDocker string
+var WsuDockerRegistry string
+var WsuDockerLogin string
+var WsuDockerLoginFile string
+var WsuDockerPasswd string
+var WsuDockerPasswdFile string
 
 type User struct {
 	Tokens   []string `json:"tokens"`
@@ -36,6 +43,14 @@ func main() {
 	WsuToken = GetEnvWithDefault("WSU_TOKEN", "WSU_TOKEN")
 	Prefix = GetEnvWithDefault("WSU_PREFIX", "")
 	docker.DockerExec = GetEnvWithDefault("DOCKER_EXEC", "docker")
+
+	WsuDocker = GetEnvWithDefault("WSU_DOCKER", "false")
+	WsuDockerRegistry = GetEnvWithDefault("WSU_DOCKER_REGISTRY", "")
+	WsuDockerLogin = GetEnvWithDefault("WSU_DOCKER_LOGIN", "")
+	WsuDockerLoginFile = GetEnvWithDefault("WSU_DOCKER_LOGIN_FILE", "")
+	WsuDockerPasswd = GetEnvWithDefault("WSU_DOCKER_PASSWD", "")
+	WsuDockerPasswdFile = GetEnvWithDefault("WSU_DOCKER_PASSWD_FILE", "")
+
 	//----- End binding
 
 	viper.SetConfigName("config")
@@ -49,6 +64,35 @@ func main() {
 		fmt.Println("Config file changed:", e.Name)
 	})
 	viper.SetConfigType("json")
+
+	if WsuDocker == "true" {
+		args := []string{"login", "-u"}
+		if WsuDockerLoginFile != "" && WsuDockerPasswdFile != "" {
+			data, err := ioutil.ReadFile(WsuDockerLoginFile)
+			if err != nil {
+				panic(fmt.Errorf("Fatal error read docker login file secret: %s \n", err))
+			}
+			WsuDockerLogin = string(data)
+
+			data, err = ioutil.ReadFile(WsuDockerPasswdFile)
+			if err != nil {
+				panic(fmt.Errorf("Fatal error read docker passwd file secret: %s \n", err))
+			}
+			WsuDockerPasswd = string(data)
+
+		}
+
+		if WsuDockerLogin != "" && WsuDockerPasswd != "" {
+			args = append(args, WsuDockerLogin, "-p", WsuDockerPasswd, WsuDockerRegistry)
+			res, e := docker.DockerCmd(args...)
+			if e != nil {
+				panic(fmt.Errorf("Fatal error docker auth: %s \n", e))
+			} else {
+				log.Println(fmt.Sprintf("\033[1;32m User %s auth to %s with result: \n %s \033[0m", WsuDockerLogin, WsuDockerRegistry, res))
+			}
+		}
+
+	}
 
 	m := macaron.Classic()
 
